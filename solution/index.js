@@ -1,7 +1,8 @@
 
 
-function createNewTask(id){
-    const textInput = document.getElementById(`add-${id}-task`).value;
+function createNewTask(id,taskText = null){
+    
+    const textInput = taskText ?? document.getElementById(`add-${id}-task`).value;
     if(!textInput || textInput === ""){
         throw alert("no task input")
     }
@@ -16,12 +17,32 @@ function createNewTask(id){
     newTask.addEventListener("dblclick",() => {
         newTask.contentEditable = true;
         newTask.focus()})
+
+    newTask.addEventListener("mouseenter",() => mouseOverFunc(newTask))   
 }
 
+
+
+function mouseOverFunc(task){
+    document.selectedTask = task;
+    task.addEventListener("mouseleave", () => {
+        document.selectedTask = null;
+});}
+
+function altKeyTaskMove(event){
+    const task = document.selectedTask;
+    const sections = document.getElementsByTagName("section");
+    const key = event.key
+    if(task && event.altKey && key <= sections.length){
+        createNewTask(sections[key - 1].id , task.textContent);
+        task.remove();
+        document.selectedTask = null;
+}
+}
  
+
  
- 
- function createSectionElement(id) {
+function createSectionElement(id) {
     const container = document.getElementById("container");
     const section = document.createElement("section");
     section.id=id;
@@ -41,8 +62,8 @@ function createNewTask(id){
 }
 
 
-
-
+document.createAttribute("selectedTask");
+document.addEventListener("keydown",(event) => altKeyTaskMove(event));
 ["to-do","in-progress","done"].forEach((id) => {
     createSectionElement(id);
 });
