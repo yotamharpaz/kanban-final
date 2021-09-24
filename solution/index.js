@@ -1,24 +1,24 @@
-// // auxiliary functions 
-//  const container = document.getElementById("container")
-//  const button = document.getElementsByTagName("button")
- 
-//  container.addEventListener("click",(evt) => {
-//   createNewTask(evt.target.parentNode.id)});
-
- 
-  
 
 
- function createNewTask(id){
+function createNewTask(id){
     const textInput = document.getElementById(`add-${id}-task`).value;
-    console.log(textInput);
-     const list = document.getElementsByClassName(`${id}-tasks`)[0];
-     const newTask = document.createElement("li");
-     list.appendChild(newTask);
-     newTask.appendChild(document.createTextNode(textInput));
-     console.log(newTask);
-     
- }
+    if(!textInput || textInput === ""){
+        throw alert("no task input")
+    }
+    const list = document.getElementsByClassName(`${id}-tasks`)[0];
+    const newTask = document.createElement("li");
+    list.appendChild(newTask);
+    newTask.classList.add("task");
+    newTask.appendChild(document.createTextNode(textInput));
+    newTask.onblur = () => {
+        newTask.contentEditable = false;
+    }
+    newTask.addEventListener("dblclick",() => {
+        newTask.contentEditable = true;
+        newTask.focus()})
+}
+
+ 
  
  
  function createSectionElement(id) {
@@ -27,7 +27,7 @@
     section.id=id;
     const ulElement  = document.createElement('ul');
     ulElement.classList.add(`${id}-tasks`)
-    ulElement.textContent = "pipikaki"
+    ulElement.textContent = `${id}`
     section.appendChild(ulElement);
     const inputElement  = document.createElement('input')
     inputElement.id = `add-${id}-task`
