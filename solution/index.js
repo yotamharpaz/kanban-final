@@ -1,9 +1,9 @@
 
 
 document.createAttribute("selectedTask");
-document.addEventListener("keydown",(event) => altKeyTaskMove(event));
+document.addEventListener("keydown",(event) => modifyTask(event));
 
-document.getElementById("search-bar").addEventListener("keyup",search);
+document.getElementById("search").addEventListener("keyup",search);
 
 ["to-do","in-progress","done"].forEach((id) => {
     createSectionElement(id);
@@ -37,7 +37,7 @@ function mouseOverFunc(task){
         document.selectedTask = null;
 });}
 
-function altKeyTaskMove(event){
+function modifyTask(event){
     const task = document.selectedTask;
     const sections = document.getElementsByTagName("section");
     const key = event.key
@@ -45,6 +45,8 @@ function altKeyTaskMove(event){
         createNewTask(sections[key - 1].id , task.textContent);
         task.remove();
         document.selectedTask = null;
+}else if(task && key === "Backspace" || task && key === "Delete" ){
+    task.remove()
 }
 }
  
@@ -66,7 +68,10 @@ function createSectionElement(id) {
     addButton.innerText = "add";
     addButton.id = `submit-add-${id}`;
     section.appendChild(addButton);
-    addButton.addEventListener("click",()=>createNewTask(id));
+    addButton.addEventListener("click",()=>{
+        createNewTask(id);
+        inputElement.value = "";
+    });
     inputElement.addEventListener("keydown",(event)=>{if(event.key === "Enter"){
         createNewTask(id);
         inputElement.value = "";
@@ -77,7 +82,7 @@ function createSectionElement(id) {
 
 
 function search(){
-    const searchText = document.getElementById("search-bar").value;
+    const searchText = document.getElementById("search").value;
     const searchTextList = searchText.toLowerCase().split("");
     const sections = Array.from(document.getElementsByTagName("section"));
     sections.forEach((section)=>Array.from(section.firstChild.children).forEach((task)=>{
@@ -103,4 +108,6 @@ function hideByFilter(task,searchTextList) {
      
     
 }
-search()
+ function deleteTask(params) {
+     
+ }
