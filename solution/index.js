@@ -1,5 +1,14 @@
 
 
+document.createAttribute("selectedTask");
+document.addEventListener("keydown",(event) => altKeyTaskMove(event));
+
+document.getElementById("search-bar").addEventListener("keyup",search);
+
+["to-do","in-progress","done"].forEach((id) => {
+    createSectionElement(id);
+});
+
 function createNewTask(id,taskText = null){
     
     const textInput = taskText ?? document.getElementById(`add-${id}-task`).value;
@@ -20,7 +29,6 @@ function createNewTask(id,taskText = null){
 
     newTask.addEventListener("mouseenter",() => mouseOverFunc(newTask))   
 }
-
 
 
 function mouseOverFunc(task){
@@ -51,6 +59,7 @@ function createSectionElement(id) {
     ulElement.textContent = `${id}`
     section.appendChild(ulElement);
     const inputElement  = document.createElement('input')
+    inputElement.onfocus = () => inputElement.value = "";
     inputElement.id = `add-${id}-task`
     section.appendChild(inputElement);
     const addButton = document.createElement("BUTTON");
@@ -58,13 +67,40 @@ function createSectionElement(id) {
     addButton.id = `submit-add-${id}`;
     section.appendChild(addButton);
     addButton.addEventListener("click",()=>createNewTask(id));
+    inputElement.addEventListener("keydown",(event)=>{if(event.key === "Enter"){
+        createNewTask(id);
+        inputElement.value = "";
+    } });
     container.appendChild(section);
 }
 
 
-document.createAttribute("selectedTask");
-document.addEventListener("keydown",(event) => altKeyTaskMove(event));
-["to-do","in-progress","done"].forEach((id) => {
-    createSectionElement(id);
-});
 
+function search(){
+    const searchText = document.getElementById("search-bar").value;
+    const searchTextList = searchText.toLowerCase().split("");
+    const sections = Array.from(document.getElementsByTagName("section"));
+    sections.forEach((section)=>Array.from(section.firstChild.children).forEach((task)=>{
+        task.style.display = "none";
+        if(searchText !== null && searchText !== ""){
+            hideByFilter(task,searchTextList);}else{task.style.display = "block";}
+    })
+    )
+}
+function hideByFilter(task,searchTextList) {
+    
+        taskTextList = task.textContent.toLowerCase().split("");
+        let i = 0;
+        if(taskTextList.length >= searchTextList.length){
+            while (taskTextList[i] === searchTextList[i] && i <= searchTextList.length) {          
+                task.style.display = "block" ;
+                i++
+             }
+        }
+        
+
+        
+     
+    
+}
+search()
