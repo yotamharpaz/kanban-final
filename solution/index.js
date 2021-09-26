@@ -3,12 +3,6 @@ const LOCAL_STORAGE_KEY = "todoListTasks"
 function localStorageInit(){
     const json = localStorage.getItem(LOCAL_STORAGE_KEY);
 
-    function loadFromLocalStorage(){
-        localStorage.getItem(LOCAL_STORAGE_KEY)
-        console.log(localStorage.getItem(LOCAL_STORAGE_KEY));
-    }
-    loadFromLocalStorage()
-
     if(!json){
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
           "to-do": [],
@@ -16,11 +10,21 @@ function localStorageInit(){
            "done": []
       }))
     }
-    return JSON.parse(json)
+    loadFromLocalStorage();
 }
 
-
 localStorageInit()
+
+function loadFromLocalStorage(){
+    localStorageObj = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
+    console.log();
+    Object.keys(localStorageObj).forEach((sectionId) => {
+        createSectionElement(sectionId);
+        localStorageObj[sectionId].forEach((taskText)=>{
+            createNewTask(sectionId,taskText);
+        })
+    });
+}
 
 document.createAttribute("selectedTask");
 
@@ -32,9 +36,6 @@ document.addEventListener("keydown",(event) => {
 
 document.getElementById("search").addEventListener("keyup",search);
 
-["to-do","in-progress","done"].forEach((id) => {
-    createSectionElement(id);
-});
 
 
 
@@ -50,7 +51,6 @@ function addItemToLocalStorage(item, list){
 }
 
 function removeItemFromLcalStorage(item,list){
-    debugger
     const currentDataFromLocalStorage = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
 
     const newData = {
@@ -106,11 +106,12 @@ function mouseOverFunc(task){
 
 function modifyTask(event){
     const task = document.selectedTask;
-    const sections = document.getElementsByTagName("section");
+    const sections = Array.from(document.getElementsByTagName("section"));
     const key = event.key
-    if(task && event.altKey && key <= sections.length){
-        
+    console.log(sections.indexOf(task.closest('section')));
+    if(task && event.altKey && key <= sections.length && sections.indexOf(task.closest('section')) !== key-1 ){
         createNewTask(sections[key - 1].id , task.textContent);
+        removeItemFromLcalStorage(task.textContent,task.closest('section').id); 
         task.remove();
         document.selectedTask = null;
 }else if(task && key === "Delete" ){
@@ -175,7 +176,3 @@ function hideByFilter(task,searchTextList) {
              }
         }   
 }
-
-
-
-localStorageInit()
