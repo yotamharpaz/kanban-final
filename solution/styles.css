@@ -18,3 +18,10 @@ button{
       display: flex;
       flex-direction: row;
   }
+  .task{
+      cursor: pointer;
+      border: black;
+      border-radius: 5px;
+      border-width: 1px;
+      border-style: dotted;
+  }   

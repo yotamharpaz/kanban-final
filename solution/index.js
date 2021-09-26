@@ -1,7 +1,34 @@
 
+const LOCAL_STORAGE_KEY = "todoListTasks"
+function localStorageInit(){
+    const json = localStorage.getItem(LOCAL_STORAGE_KEY);
+
+    function loadFromLocalStorage(){
+        localStorage.getItem(LOCAL_STORAGE_KEY)
+        console.log(localStorage.getItem(LOCAL_STORAGE_KEY));
+    }
+    loadFromLocalStorage()
+
+    if(!json){
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
+          "to-do": [],
+          "in-progress": [],
+           "done": []
+      }))
+    }
+    return JSON.parse(json)
+}
+
+
+localStorageInit()
 
 document.createAttribute("selectedTask");
-document.addEventListener("keydown",(event) => modifyTask(event));
+
+document.addEventListener("keydown",(event) => {
+    if(document.selectedTask) {
+        modifyTask(event)
+    }
+});
 
 document.getElementById("search").addEventListener("keyup",search);
 
@@ -9,8 +36,34 @@ document.getElementById("search").addEventListener("keyup",search);
     createSectionElement(id);
 });
 
+
+
+function addItemToLocalStorage(item, list){
+    const currentDataFromLocalStorage = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
+
+    const newData = {
+        ...currentDataFromLocalStorage,
+        [list]: [...currentDataFromLocalStorage[list], item]
+    }
+
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData))
+}
+
+function removeItemFromLcalStorage(item,list){
+    debugger
+    const currentDataFromLocalStorage = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
+
+    const newData = {
+        ...currentDataFromLocalStorage,
+        [list]: currentDataFromLocalStorage[list].filter(listItem => listItem !== item)
+    }
+
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData))
+
+}
+
 function createNewTask(id,taskText = null){
-    
+
     const textInput = taskText ?? document.getElementById(`add-${id}-task`).value;
     if(!textInput || textInput === ""){
         throw alert("no task input")
@@ -23,11 +76,22 @@ function createNewTask(id,taskText = null){
     newTask.onblur = () => {
         newTask.contentEditable = false;
     }
-    newTask.addEventListener("dblclick",() => {
+    newTask.setAttribute("dragabble","true");
+    newTask.addEventListener("dblclick",(e) => {
         newTask.contentEditable = true;
-        newTask.focus()})
+        newTask.focus();
+        let updateTask = e.targert.innerText;
+        newTask.onblur(() => addItemToLocalStorage(textInput, id))
+        
+    });
 
-    newTask.addEventListener("mouseenter",() => mouseOverFunc(newTask))   
+        
+    
+    
+    newTask.addEventListener("mouseenter",() => mouseOverFunc(newTask));
+    
+     
+    addItemToLocalStorage(textInput, id);
 }
 
 
@@ -35,20 +99,25 @@ function mouseOverFunc(task){
     document.selectedTask = task;
     task.addEventListener("mouseleave", () => {
         document.selectedTask = null;
-});}
+})
+ 
+
+}
 
 function modifyTask(event){
     const task = document.selectedTask;
     const sections = document.getElementsByTagName("section");
     const key = event.key
     if(task && event.altKey && key <= sections.length){
+        
         createNewTask(sections[key - 1].id , task.textContent);
         task.remove();
         document.selectedTask = null;
-}else if(task && key === "Backspace" || task && key === "Delete" ){
-    task.remove()
-}
-}
+}else if(task && key === "Delete" ){
+    
+    removeItemFromLcalStorage(task.textContent,task.closest('section').id)
+    task.remove();
+}}
  
 
  
@@ -72,11 +141,14 @@ function createSectionElement(id) {
         createNewTask(id);
         inputElement.value = "";
     });
+
+
     inputElement.addEventListener("keydown",(event)=>{if(event.key === "Enter"){
         createNewTask(id);
         inputElement.value = "";
     } });
     container.appendChild(section);
+    
 }
 
 
@@ -101,13 +173,9 @@ function hideByFilter(task,searchTextList) {
                 task.style.display = "block" ;
                 i++
              }
-        }
-        
-
-        
-     
-    
+        }   
 }
- function deleteTask(params) {
-     
- }
+
+
+
+localStorageInit()
