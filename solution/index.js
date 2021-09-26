@@ -1,5 +1,5 @@
 
-const LOCAL_STORAGE_KEY = "todoListTasks"
+const LOCAL_STORAGE_KEY = "tasks"
 function localStorageInit(){
     const json = localStorage.getItem(LOCAL_STORAGE_KEY);
 
@@ -21,7 +21,7 @@ function loadFromLocalStorage(){
     Object.keys(localStorageObj).forEach((sectionId) => {
         createSectionElement(sectionId);
         localStorageObj[sectionId].forEach((taskText)=>{
-            createNewTask(sectionId,taskText);
+            createNewTask(sectionId,taskText,false);
         })
     });
 }
@@ -40,17 +40,17 @@ document.getElementById("search").addEventListener("keyup",search);
 
 
 function addItemToLocalStorage(item, list){
-    const currentDataFromLocalStorage = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
-
-    const newData = {
-        ...currentDataFromLocalStorage,
-        [list]: [...currentDataFromLocalStorage[list], item]
-    }
-
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData))
+        const currentDataFromLocalStorage = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
+        
+        const newData = {
+            ...currentDataFromLocalStorage,
+            [list]: [...currentDataFromLocalStorage[list], item]
+        }
+        
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData))
 }
 
-function removeItemFromLcalStorage(item,list){
+function removeItemFromLocalStorage(item,list){
     const currentDataFromLocalStorage = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
 
     const newData = {
@@ -62,7 +62,7 @@ function removeItemFromLcalStorage(item,list){
 
 }
 
-function createNewTask(id,taskText = null){
+function createNewTask(id,taskText = null,addToLS = true){
 
     const textInput = taskText ?? document.getElementById(`add-${id}-task`).value;
     if(!textInput || textInput === ""){
@@ -73,25 +73,21 @@ function createNewTask(id,taskText = null){
     list.appendChild(newTask);
     newTask.classList.add("task");
     newTask.appendChild(document.createTextNode(textInput));
-    newTask.onblur = () => {
-        newTask.contentEditable = false;
-    }
-    newTask.setAttribute("dragabble","true");
-    newTask.addEventListener("dblclick",(e) => {
+    newTask.classList.add("draggable");
+    newTask.setAttribute("draggable","true");
+    newTask.addEventListener("dblclick",() => {
+        removeItemFromLocalStorage(newTask.textContent ,id);
         newTask.contentEditable = true;
         newTask.focus();
-        let updateTask = e.targert.innerText;
-        newTask.onblur(() => addItemToLocalStorage(textInput, id))
-        
+        newTask.onblur = () => {
+            newTask.contentEditable = false;
+            newTask.textContent ? addItemToLocalStorage(newTask.textContent ,id) : newTask.remove();
+        }
     });
 
-        
-    
-    
     newTask.addEventListener("mouseenter",() => mouseOverFunc(newTask));
-    
      
-    addItemToLocalStorage(textInput, id);
+    if(addToLS) addItemToLocalStorage(textInput, id);
 }
 
 
@@ -111,12 +107,12 @@ function modifyTask(event){
     console.log(sections.indexOf(task.closest('section')));
     if(task && event.altKey && key <= sections.length && sections.indexOf(task.closest('section')) !== key-1 ){
         createNewTask(sections[key - 1].id , task.textContent);
-        removeItemFromLcalStorage(task.textContent,task.closest('section').id); 
+        removeItemFromLocalStorage(task.textContent,task.closest('section').id); 
         task.remove();
         document.selectedTask = null;
 }else if(task && key === "Delete" ){
     
-    removeItemFromLcalStorage(task.textContent,task.closest('section').id)
+    removeItemFromLocalStorage(task.textContent,task.closest('section').id)
     task.remove();
 }}
  
@@ -175,4 +171,46 @@ function hideByFilter(task,searchTextList) {
                 i++
              }
         }   
+}
+
+const draggables = document.querySelectorAll('.draggable')
+const sections = document.querySelectorAll('section')
+console.log(draggables);
+
+draggables.forEach(draggable => {
+  draggable.addEventListener('dragstart', () => {
+    draggable.classList.add('dragging')
+  })
+
+  draggable.addEventListener('dragend', () => {
+    draggable.classList.remove('dragging')
+  })
+})
+
+sections.forEach(section => {
+  section.addEventListener('dragover', e => {
+    e.preventDefault()
+    const ul = document.getElementsByTagName("ul");
+    const afterElement = getDragAfterElement(ul, e.clientY);
+    const draggable = document.querySelector('.dragging');
+    if (afterElement == null) {
+      section.appendChild(draggable);
+    } else {
+      section.insertBefore(draggable, afterElement);
+    }
+  })
+})
+
+function getDragAfterElement(section, y,) {
+  const draggableElements = [...section.querySelectorAll('.draggable:not(.dragging)')];
+
+  return draggableElements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      return { offset: offset, element: child }
+    } else {
+      return closest
+    }
+  }, { offset: Number.NEGATIVE_INFINITY }).element
 }
