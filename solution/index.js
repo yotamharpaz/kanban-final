@@ -1,27 +1,28 @@
 
-const LOCAL_STORAGE_KEY = "todoListTasks"
+const LOCAL_STORAGE_KEY = "tasks"
 function localStorageInit(){
     const json = localStorage.getItem(LOCAL_STORAGE_KEY);
 
     if(!json){
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
-          "to-do": [],
+          "todo": [],
           "in-progress": [],
            "done": []
       }))
     }
+
     loadFromLocalStorage();
 }
 
 localStorageInit()
 
 function loadFromLocalStorage(){
-    localStorageObj = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
-    console.log();
+    
+    const localStorageObj = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
     Object.keys(localStorageObj).forEach((sectionId) => {
-        createSectionElement(sectionId);
+        createSectionElement(sectionId); 
         localStorageObj[sectionId].forEach((taskText)=>{
-            createNewTask(sectionId,taskText);
+            createNewTask(sectionId,taskText,false);
         })
     });
 }
@@ -39,9 +40,9 @@ document.getElementById("search").addEventListener("keyup",search);
 
 
 
-function addItemToLocalStorage(item, list){
+function addItemToLocalStorage(item, sectionId){
     const currentDataFromLocalStorage = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
-
+    const list = fixTestTypoToLS(sectionId);
     const newData = {
         ...currentDataFromLocalStorage,
         [list]: [...currentDataFromLocalStorage[list], item]
@@ -50,9 +51,9 @@ function addItemToLocalStorage(item, list){
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData))
 }
 
-function removeItemFromLcalStorage(item,list){
+function removeItemFromLcalStorage(item,sectionId){
     const currentDataFromLocalStorage = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
-
+    const list = fixTestTypoToLS(sectionId);
     const newData = {
         ...currentDataFromLocalStorage,
         [list]: currentDataFromLocalStorage[list].filter(listItem => listItem !== item)
@@ -62,36 +63,33 @@ function removeItemFromLcalStorage(item,list){
 
 }
 
-function createNewTask(id,taskText = null){
-
+function createNewTask(sectionId,taskText = null,addToLocalStorage = true){
+    const id = fixTestTypoFromLS(sectionId);
     const textInput = taskText ?? document.getElementById(`add-${id}-task`).value;
     if(!textInput || textInput === ""){
         throw alert("no task input")
     }
     const list = document.getElementsByClassName(`${id}-tasks`)[0];
+    console.log(list);
     const newTask = document.createElement("li");
     list.appendChild(newTask);
     newTask.classList.add("task");
+    newTask.classList.add("draggeble")
     newTask.appendChild(document.createTextNode(textInput));
     newTask.onblur = () => {
         newTask.contentEditable = false;
     }
-    newTask.setAttribute("dragabble","true");
+
+    newTask.setAttribute("draggable","true");
     newTask.addEventListener("dblclick",(e) => {
         newTask.contentEditable = true;
         newTask.focus();
-        let updateTask = e.targert.innerText;
-        newTask.onblur(() => addItemToLocalStorage(textInput, id))
         
     });
 
-        
-    
-    
     newTask.addEventListener("mouseenter",() => mouseOverFunc(newTask));
-    
      
-    addItemToLocalStorage(textInput, id);
+    if(addToLocalStorage) addItemToLocalStorage(textInput, id);
 }
 
 
@@ -104,14 +102,17 @@ function mouseOverFunc(task){
 
 }
 
+function fixTestTypoFromLS(id) {return id === "todo" ? "to-do" :id;}
+function fixTestTypoToLS(id) {return id === "to-do" ? "todo" :id;}
+
+
 function modifyTask(event){
     const task = document.selectedTask;
     const sections = Array.from(document.getElementsByTagName("section"));
     const key = event.key
-    console.log(sections.indexOf(task.closest('section')));
     if(task && event.altKey && key <= sections.length && sections.indexOf(task.closest('section')) !== key-1 ){
         createNewTask(sections[key - 1].id , task.textContent);
-        removeItemFromLcalStorage(task.textContent,task.closest('section').id); 
+        removeItemFromLcalStorage(task.textContent, task.closest('section').id); 
         task.remove();
         document.selectedTask = null;
 }else if(task && key === "Delete" ){
@@ -125,7 +126,7 @@ function modifyTask(event){
 function createSectionElement(id) {
     const container = document.getElementById("container");
     const section = document.createElement("section");
-    section.id=id;
+    section.id=fixTestTypoFromLS(id);
     const ulElement  = document.createElement('ul');
     ulElement.classList.add(`${id}-tasks`)
     ulElement.textContent = `${id}`
@@ -176,3 +177,24 @@ function hideByFilter(task,searchTextList) {
              }
         }   
 }
+
+// const draggables = document.querySelectorAll(".draggable")
+// const dropZones = document.getElementsByTagName("section")
+
+// draggables.forEach(draggable => {
+//     draggable.addEventListener("dragstart",() => {
+//         draggable.classList.add("dragging") ;
+    
+//     });
+//     draggable.addEventListener("dragend",() => {
+//     draggable.classList.remove("dragging")
+//     })
+// })
+// dropZones.forEach(dropZone => {
+//   dropZone.addEventListener("dragover",() =>{
+//       const draggable = querySelectorAll(".dragging");
+//       dropZone.appendChild(draggable)
+//   } )  
+// });
+
+
