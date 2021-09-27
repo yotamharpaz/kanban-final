@@ -17,7 +17,6 @@ localStorageInit()
 
 function loadFromLocalStorage(){
     localStorageObj = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
-    console.log();
     Object.keys(localStorageObj).forEach((sectionId) => {
         createSectionElement(sectionId);
         localStorageObj[sectionId].forEach((taskText)=>{
@@ -111,7 +110,6 @@ function modifyTask(event){
     
     removeItemFromLocalStorage(task.textContent,task.closest('section').id)
     task.remove();
-    // list.children.sort((a,b) => a-b);
 }}
  
 
